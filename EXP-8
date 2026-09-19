@@ -1,0 +1,146 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+void main() {
+  runApp(
+    ChangeNotifierProvider<AnimationData>(
+      create: (context) => AnimationData(),
+      builder: (context, child) => const Application(),
+    ),
+  );
+}
+
+class AnimationData extends ChangeNotifier {
+  bool _isAnimating = false;
+  double _rotation = 0.0;
+  double _scale = 1.0;
+  double _opacity = 1.0;
+  Color _color = Colors.indigo;
+
+  bool get isAnimating => _isAnimating;
+  double get rotation => _rotation;
+  double get scale => _scale;
+  double get opacity => _opacity;
+  Color get color => _color;
+
+  void toggleAnimation() {
+    _isAnimating = !_isAnimating;
+    if (_isAnimating) {
+      _rotation = 2.0;
+      _scale = 1.5;
+      _opacity = 0.5;
+      _color = Colors.teal;
+    } else {
+      _rotation = 0.0;
+      _scale = 1.0;
+      _opacity = 1.0;
+      _color = Colors.indigo;
+    }
+    notifyListeners();
+  }
+}
+
+class Application extends StatelessWidget {
+  const Application({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: Colors.indigo,
+        brightness: Brightness.light,
+      ),
+      home: const Dashboard(),
+    );
+  }
+}
+
+class Dashboard extends StatelessWidget {
+  const Dashboard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final data = Provider.of<AnimationData>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Interactive Transform Controller'),
+        centerTitle: true,
+        elevation: 2,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 600),
+                opacity: data.opacity,
+                child: AnimatedRotation(
+                  duration: const Duration(milliseconds: 600),
+                  turns: data.rotation,
+                  curve: Curves.easeInOutBack,
+                  child: AnimatedScale(
+                    duration: const Duration(milliseconds: 600),
+                    scale: data.scale,
+                    curve: Curves.elasticOut,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 600),
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        color: data.color,
+                        borderRadius: BorderRadius.circular(40),
+                        boxShadow: [
+                          BoxShadow(
+                            color: data.color.withValues(alpha: 0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.star_rounded,
+                        color: Colors.white,
+                        size: 80,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 100),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: () => data.toggleAnimation(),
+                icon: Icon(data.isAnimating ? Icons.restart_alt : Icons.play_arrow),
+                label: Text(
+                  data.isAnimating ? 'Reset Transformation' : 'Animate State',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'State: ${data.isAnimating ? "Transformed" : "Idle"}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
